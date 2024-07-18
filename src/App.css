@@ -1,0 +1,66 @@
+/* App.css */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #282c34;
+  color: white;
+}
+
+.App {
+  text-align: center;
+}
+
+.App-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+input {
+  margin: 10px;
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  max-width: 300px;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 10px;
+  background-color: #61dafb;
+  border: none;
+  border-radius: 5px;
+  color: black;
+}
+
+button:hover {
+  background-color: #21a1f1;
+}
+
+p {
+  margin: 5px 0;
+}
+
+h2 {
+  margin: 10px 0;
+}
+
+img {
+  width: 150px;
+  height: 150px;
+  margin: 10px 0;
+}
