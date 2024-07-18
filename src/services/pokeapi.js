@@ -7,7 +7,7 @@ export const getPokemon = async (name) => {
     const response = await axios.get(`${API_URL}/pokemon/${name}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching Pokemon:', error);
+    console.error('Error fetching Pokémon:', error);
     return null;
   }
 };

@@ -3,13 +3,16 @@
 body, html {
   margin: 0;
   padding: 0;
-  height: 100%;
   display: flex;
+  width: 100%;
+  height: 100%;
   align-items: center;
   justify-content: center;
-  background-color: #282c34;
+  /* background-color: #282c34; */
   color: white;
 }
+
+/* CLASS STYLES */
 
 .App {
   text-align: center;
@@ -27,7 +30,22 @@ body, html {
   box-sizing: border-box;
 }
 
-input {
+.pInfo {
+  margin: 5px 0;
+}
+
+/* ID STYLES HERE */
+
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #282c34;
+}
+
+#barSearch {
   margin: 10px;
   padding: 10px;
   font-size: 16px;
@@ -36,7 +54,7 @@ input {
   box-sizing: border-box;
 }
 
-button {
+#btnSearch {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
@@ -47,20 +65,53 @@ button {
   color: black;
 }
 
-button:hover {
+#btnSearch:hover {
   background-color: #21a1f1;
 }
 
-p {
-  margin: 5px 0;
-}
-
-h2 {
+#txtPokemonName {
   margin: 10px 0;
+  font-size: 24px;
+  font-weight: bold;
 }
 
-img {
+#txtErr {
+  margin: 5px 0;
+  color: red;
+}
+
+#poke-img {
   width: 150px;
   height: 150px;
   margin: 10px 0;
+}
+
+#pokedex-logo {
+  width: 300px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+/* Suggestions dropdown */
+.suggestions {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  background-color: white;
+  color: black;
+  border: 1px solid #ddd;
+  max-width: 300px;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.suggestions li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.suggestions li:hover {
+  background-color: #f0f0f0;
 }
