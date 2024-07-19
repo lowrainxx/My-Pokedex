@@ -4,18 +4,31 @@ body, html {
   margin: 0;
   padding: 0;
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   align-items: center;
-  justify-content: center;
-  /* background-color: #282c34; */
+  justify-content: flex-start;
+  background-color: #282c34;
   color: white;
 }
 
-/* CLASS STYLES */
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* . CLASS STYLES . */
 
 .App {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1; /* Allow the main content to grow and center vertically */
 }
 
 .App-header {
@@ -23,7 +36,6 @@ body, html {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   width: 100%;
   max-width: 600px;
   padding: 20px;
@@ -34,45 +46,93 @@ body, html {
   margin: 5px 0;
 }
 
-/* ID STYLES HERE */
-
-#root {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Search bar */
+.search-container {
+  position: relative;
   width: 100%;
-  height: 100%;
-  background-color: #282c34;
+  max-width: 300px;
 }
+
+/* # ID STYLES HERE # */
+
+
 
 #barSearch {
   margin: 10px;
-  padding: 10px;
+  padding: 10px 10px 10px 10px;
   font-size: 16px;
   width: 100%;
-  max-width: 300px;
   box-sizing: border-box;
 }
 
-#btnSearch {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  margin: 10px;
-  background-color: #61dafb;
+.btnSearch {
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  transform: translateY(-50%);
   border: none;
-  border-radius: 5px;
-  color: black;
+  background: none;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
 }
 
-#btnSearch:hover {
-  background-color: #21a1f1;
+.btnSearch .fas {
+  font-size: 20px;
+}
+
+.btnSearch:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltiptext {
+  visibility: hidden;
+  width: 60px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -30px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.pokemon-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.pokemon-card {
+  background-color: #f9f9f9;
+  color: black;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 150px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pokemon-card img {
+  width: 100px;
+  height: 100px;
 }
 
 #txtPokemonName {
   margin: 10px 0;
   font-size: 24px;
   font-weight: bold;
+  text-align: center;
 }
 
 #txtErr {
@@ -80,16 +140,67 @@ body, html {
   color: red;
 }
 
-#poke-img {
+#imgPokemon {
   width: 150px;
   height: 150px;
   margin: 10px 0;
 }
 
-#pokedex-logo {
+#imgPokedexLogo {
   width: 300px;
   height: auto;
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background-color: #282c34; /* Ensure the background color matches */
+  z-index: 1000; /* Keep the logo on top */
+}
+
+/* Overlay and Modal Styles */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Ensure the overlay is on top */
+}
+
+.modal {
+  background-color: white;
+  color: black;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 90%;
+  box-sizing: border-box;
+  text-align: center; /* Center text within modal */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+}
+
+/* Back to the Pokedex button */
+.btnBack {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #61dafb;
+  border: none;
+  border-radius: 5px;
+  color: black;
+  z-index: 1001;
+}
+
+.btnBack:hover {
+  background-color: #21a1f1;
 }
 
 /* Suggestions dropdown */

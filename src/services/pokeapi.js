@@ -11,3 +11,13 @@ export const getPokemon = async (name) => {
     return null;
   }
 };
+
+export const getPokemonList = async (offset, limit) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pokemon?offset=${offset}&limit=${limit}`);
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
