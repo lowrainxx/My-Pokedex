@@ -198,19 +198,25 @@ body, html {
 
 /* SEARCH BAR */
 
+/* SEARCH BAR */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px; /* Adjust the width to fit both search and sort */
+  display: flex; /* Use flexbox to align items */
+  align-items: center; /* Center align items vertically */
+}
+
 #search-field {
   margin: 10px;
   padding: 10px 10px 10px 10px;
   font-size: 16px;
-  width: 100%;
+  width: calc(100% - 90px); /* Adjust width to leave space for sort */
   box-sizing: border-box;
 }
 
 #btnSearch {
-  position: absolute;
-  right: 1px;
-  top: 50%;
-  transform: translateY(-50%);
+  margin-left: 10px; /* Add some space between search button and sort dropdown */
   border: none;
   background: none;
   cursor: pointer;
@@ -270,7 +276,18 @@ body, html {
   background-color: #f0f0f0;
 }
 
-/* Ensure dropdown is correctly positioned under the input */
-.search-container {
-  position: relative;
+/* Sort Dropdown */
+#sortOrder {
+  margin-left: 10px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #61dafb;
+  color: #282c34;
+  cursor: pointer;
+}
+
+#sortOrder:hover {
+  background-color: #21a1f1;
 }

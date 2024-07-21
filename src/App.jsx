@@ -15,23 +15,27 @@ function App() {
   const [searched, setSearched] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggested, setisSuggested] = useState(false);
+  const [sortOrder, setSortOrder] = useState('asc'); // State for sorting order
 
   // Fetch pokemon
   useEffect(() => {
     const fetchInitialPokemons = async () => {
-      const initialIds = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+      const initialIds = sortOrder === 'asc'
+        ? Array.from({ length: 10 }, (_, i) => (i + 1).toString())
+        : Array.from({ length: 10 }, (_, i) => (1025 - i).toString());
       const initialData = await Promise.all(initialIds.map(id => getPokemon(id)));
       setSamplePokemons(initialData);
     };
     fetchInitialPokemons();
-  }, []);
+  }, [sortOrder]);
 
   // Load more
   const loadMorePokemons = async () => {
     if (isLoading) return;
     setIsLoading(true);
-    const newCount = samplePokemons.length + 10;
-    const newIds = Array.from({ length: 10 }, (_, i) => (i + samplePokemons.length + 1).toString());
+    const newIds = sortOrder === 'asc'
+      ? Array.from({ length: 10 }, (_, i) => (samplePokemons.length + i + 1).toString())
+      : Array.from({ length: 10 }, (_, i) => (1025 - samplePokemons.length - i).toString());
     const newData = await Promise.all(newIds.map(id => getPokemon(id)));
     setSamplePokemons([...samplePokemons, ...newData]);
     setIsLoading(false);
@@ -140,6 +144,20 @@ function App() {
     }
   }, [pokemonName]);
 
+  // Handle sort change
+  const handleSortChange = (event) => {
+    setSortOrder(event.target.value);
+  };
+
+  // Sort samplePokemons based on sortOrder
+  const sortedSamplePokemons = [...samplePokemons].sort((a, b) => {
+    if (sortOrder === 'asc') {
+      return a.id - b.id;
+    } else {
+      return b.id - a.id;
+    }
+  });
+
   // Card is clicked
   const handleCardClick = (selectedPokemon) => {
     setPokemon(selectedPokemon);
@@ -190,6 +208,10 @@ function App() {
           <i className="fas fa-search"></i>
           <span className="tooltiptext">Search</span>
         </button>
+        <select id="sortOrder" value={sortOrder} onChange={handleSortChange}>
+          <option value="asc">Sort by ID: Ascending</option>
+          <option value="desc">Sort by ID: Descending</option>
+        </select>
         {suggestions.length > 0 && (
           <div className="suggestions-dropdown">
             {suggestions.map((suggestion, index) => (
@@ -206,7 +228,7 @@ function App() {
       </div>
       {error && <p id="txtErr">{error}</p>}
       <div className="pokemon-cards-container">
-        {samplePokemons.map(samplePokemon => (
+        {sortedSamplePokemons.map(samplePokemon => (
           <div key={samplePokemon.id} className="pokemon-card" onClick={() => handleCardClick(samplePokemon)}>
             <p id="card-id">ID No: {formatId(samplePokemon.id)}</p>
             <p id="card-name">Name: {fixPokemonName(samplePokemon.name)}</p>
