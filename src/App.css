@@ -243,3 +243,34 @@ body, html {
   opacity: 0;
   transition: opacity 0.3s;
 }
+
+/* Dropdown container */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px; /* Adjust as needed */
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+/* Individual suggestion item */
+.suggestion-item {
+  padding: 10px;
+  cursor: pointer;
+  color: #282c34;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Ensure dropdown is correctly positioned under the input */
+.search-container {
+  position: relative;
+}
