@@ -18,6 +18,51 @@ function App() {
   const [sortOrder, setSortOrder] = useState('idAsc'); // State for sorting order
   const [loadedPokemonCount, setLoadedPokemonCount] = useState(0); // State for loaded pokemon count
 
+  const typeChart = {
+    Normal: { weak: ["Fighting"], resist: [], immune: ["Ghost"] },
+    Fire: { weak: ["Water", "Ground", "Rock"], resist: ["Fire", "Grass", "Ice", "Bug", "Steel", "Fairy"], immune: [] },
+    Water: { weak: ["Electric", "Grass"], resist: ["Fire", "Water", "Ice", "Steel"], immune: [] },
+    Electric: { weak: ["Ground"], resist: ["Electric", "Flying", "Steel"], immune: [] },
+    Grass: { weak: ["Fire", "Ice", "Poison", "Flying", "Bug"], resist: ["Water", "Electric", "Grass", "Ground"], immune: [] },
+    Ice: { weak: ["Fire", "Fighting", "Rock", "Steel"], resist: ["Ice"], immune: [] },
+    Fighting: { weak: ["Flying", "Psychic", "Fairy"], resist: ["Bug", "Rock", "Dark"], immune: [] },
+    Poison: { weak: ["Ground", "Psychic"], resist: ["Grass", "Fighting", "Poison", "Bug", "Fairy"], immune: [] },
+    Ground: { weak: ["Water", "Ice", "Grass"], resist: ["Poison", "Rock"], immune: ["Electric"] },
+    Flying: { weak: ["Electric", "Ice", "Rock"], resist: ["Grass", "Fighting", "Bug"], immune: ["Ground"] },
+    Psychic: { weak: ["Bug", "Ghost", "Dark"], resist: ["Fighting", "Psychic"], immune: [] },
+    Bug: { weak: ["Fire", "Flying", "Rock"], resist: ["Grass", "Fighting", "Ground"], immune: [] },
+    Rock: { weak: ["Water", "Grass", "Fighting", "Ground", "Steel"], resist: ["Normal", "Fire", "Poison", "Flying"], immune: [] },
+    Ghost: { weak: ["Ghost", "Dark"], resist: ["Poison", "Bug"], immune: ["Normal", "Fighting"] },
+    Dragon: { weak: ["Ice", "Dragon", "Fairy"], resist: ["Fire", "Water", "Electric", "Grass"], immune: [] },
+    Dark: { weak: ["Fighting", "Bug", "Fairy"], resist: ["Ghost", "Dark"], immune: ["Psychic"] },
+    Steel: { weak: ["Fire", "Fighting", "Ground"], resist: ["Normal", "Grass", "Ice", "Flying", "Psychic", "Bug", "Rock", "Dragon", "Steel", "Fairy"], immune: ["Poison"] },
+    Fairy: { weak: ["Poison", "Steel"], resist: ["Fighting", "Bug", "Dark"], immune: ["Dragon"] },
+  };
+  
+  const getWeaknesses = (types) => {
+    const weaknesses = new Set();
+  
+    const normalizeTypeName = (name) => name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  
+    types.forEach((type) => {
+      const normalizedType = normalizeTypeName(type);
+      if (typeChart[normalizedType]) {
+        typeChart[normalizedType].weak.forEach((weakness) => weaknesses.add(weakness));
+      }
+    });
+  
+    // Remove resistances and immunities
+    types.forEach((type) => {
+      const normalizedType = normalizeTypeName(type);
+      if (typeChart[normalizedType]) {
+        typeChart[normalizedType].resist.forEach((resistance) => weaknesses.delete(resistance));
+        typeChart[normalizedType].immune.forEach((immunity) => weaknesses.delete(immunity));
+      }
+    });
+  
+    return Array.from(weaknesses);
+  };
+
   // Fetch initial Pokémon based on sort order
   useEffect(() => {
     const fetchInitialPokemons = async () => {
@@ -35,8 +80,6 @@ function App() {
       }
 
       const initialData = await Promise.all(initialIds.map((id) => getPokemon(id)));
-      console.log(initialIds);
-      console.log(initialData);
       setSamplePokemons(initialData);
       setLoadedPokemonCount(10);
     };
@@ -238,7 +281,7 @@ function App() {
         <input
           id="search-field"
           type="text"
-          value={fixPokemonName(inputField)}
+          value={inputField}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Enter Pokémon name or ID"
@@ -272,10 +315,10 @@ function App() {
       <div className="pokemon-cards-container">
         {sortedSamplePokemons.map((samplePokemon) => (
           <div key={samplePokemon.id} className="pokemon-card" onClick={() => handleCardClick(samplePokemon)}>
-            <p id="card-id">ID No: {formatId(samplePokemon.id)}</p>
-            <p id="card-name">Name: {fixPokemonName(samplePokemon.name)}</p>
+            <p id="card-id">{formatId(samplePokemon.id)}</p>
+            <p id="card-name">{fixPokemonName(samplePokemon.name)}</p>
             <img id="card-img" src={samplePokemon.sprites.front_default} alt={samplePokemon.name} />
-            <p>Type: {samplePokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
+            <p>{samplePokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
           </div>
         ))}
       </div>
@@ -289,10 +332,24 @@ function App() {
               {pokemon && (
                 <>
                   <div id="info-name">{fixPokemonName(pokemon.name)}</div>
+                  <div id="info-id">{formatId(pokemon.id)}</div>
                   <img id="info-img" src={pokemon.sprites.front_default} alt={pokemon.name} />
-                  <p className="pInfo">Height: {pokemon.height}</p>
-                  <p className="pInfo">Weight: {pokemon.weight}</p>
-                  <p className="pInfo">Type: {pokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
+                  <div className="info-container">
+                    <div className="info-left">
+                      <p className="pInfo">Height: {pokemon.height}</p>
+                      <p className="pInfo">Weight: {pokemon.weight}</p>
+                      <p className="pInfo">Type: {pokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
+                      <p className="pInfo">Weaknesses: {getWeaknesses(pokemon.types.map((typeInfo) => typeInfo.type.name)).join(', ')}</p>
+                    </div>
+                    <div className="info-right">
+                      <p className="pInfo">Stats:</p>
+                      <ul className="stats-list">
+                        {pokemon.stats.map((stat, index) => (
+                          <li key={index}>{stat.stat.name}: {stat.base_stat}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -301,7 +358,7 @@ function App() {
         </>
       )}
     </div>
-  );
+  );  
 }
 
 export default App;

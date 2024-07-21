@@ -40,6 +40,23 @@ body, html {
   margin: 5px 0;
 }
 
+.info-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 600px;
+}
+
+.info-left, .info-right {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.stats-list {
+  list-style-type: none;
+  padding: 0;
+}
+
 .search-container {
   position: relative;
   width: 100%;
@@ -64,13 +81,17 @@ body, html {
   color: black;
   padding: 20px;
   border-radius: 10px;
-  max-width: 90%;
+  max-width: 80%;
+  width: 80%;
+  max-height: 70%;
+  height: 70%;
   box-sizing: border-box;
   text-align: center; 
   display: flex;
   flex-direction: column;
   align-items: center; 
 }
+
 
 /* Back to the Pokedex button */
 .btnBack {
@@ -157,6 +178,13 @@ body, html {
   width: 150px;
   height: 150px;
   margin: 10px 0;
+}
+
+#info-id {
+  margin: 10px 0;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
 }
 
 #imgPokedexLogo {
