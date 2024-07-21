@@ -15,29 +15,56 @@ function App() {
   const [searched, setSearched] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggested, setisSuggested] = useState(false);
-  const [sortOrder, setSortOrder] = useState('asc'); // State for sorting order
+  const [sortOrder, setSortOrder] = useState('idAsc'); // State for sorting order
+  const [loadedPokemonCount, setLoadedPokemonCount] = useState(0); // State for loaded pokemon count
 
-  // Fetch pokemon
+  // Fetch initial Pokémon based on sort order
   useEffect(() => {
     const fetchInitialPokemons = async () => {
-      const initialIds = sortOrder === 'asc'
-        ? Array.from({ length: 10 }, (_, i) => (i + 1).toString())
-        : Array.from({ length: 10 }, (_, i) => (1025 - i).toString());
-      const initialData = await Promise.all(initialIds.map(id => getPokemon(id)));
+      let initialIds = [];
+
+      if (sortOrder === 'idAsc') {
+        initialIds = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+      } else if (sortOrder === 'idDesc') {
+        initialIds = Array.from({ length: 10 }, (_, i) => (1025 - i).toString());
+      } else {
+        const sortedList = [...allPokemonList].sort((a, b) =>
+          sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
+        );
+        initialIds = sortedList.slice(0, 10).map((name) => getPokemonIdFromName(name));
+      }
+
+      const initialData = await Promise.all(initialIds.map((id) => getPokemon(id)));
+      console.log(initialIds);
+      console.log(initialData);
       setSamplePokemons(initialData);
+      setLoadedPokemonCount(10);
     };
+
     fetchInitialPokemons();
   }, [sortOrder]);
 
-  // Load more
+  // Load more Pokémon based on sort order
   const loadMorePokemons = async () => {
     if (isLoading) return;
     setIsLoading(true);
-    const newIds = sortOrder === 'asc'
-      ? Array.from({ length: 10 }, (_, i) => (samplePokemons.length + i + 1).toString())
-      : Array.from({ length: 10 }, (_, i) => (1025 - samplePokemons.length - i).toString());
-    const newData = await Promise.all(newIds.map(id => getPokemon(id)));
+
+    let newIds = [];
+
+    if (sortOrder === 'idAsc') {
+      newIds = Array.from({ length: 10 }, (_, i) => (loadedPokemonCount + i + 1).toString());
+    } else if (sortOrder === 'idDesc') {
+      newIds = Array.from({ length: 10 }, (_, i) => (1025 - loadedPokemonCount - i).toString());
+    } else {
+      const sortedList = [...allPokemonList].sort((a, b) =>
+        sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
+      );
+      newIds = sortedList.slice(loadedPokemonCount, loadedPokemonCount + 10).map((name) => getPokemonIdFromName(name));
+    }
+
+    const newData = await Promise.all(newIds.map((id) => getPokemon(id)));
     setSamplePokemons([...samplePokemons, ...newData]);
+    setLoadedPokemonCount(loadedPokemonCount + 10);
     setIsLoading(false);
   };
 
@@ -46,7 +73,7 @@ function App() {
     return string
       .toLowerCase()
       .split('-')
-      .map(word => {
+      .map((word) => {
         if (word.toLowerCase() === 'gmax') {
           return 'Gigantamax';
         } else {
@@ -94,9 +121,17 @@ function App() {
   // Get pokemon id from name
   const getPokemonIdFromName = (name) => {
     const lowerCaseName = name.toLowerCase();
-    const index = allPokemonList.findIndex(pokemonName => pokemonName.toLowerCase() === lowerCaseName);
-    return index !== -1 ? (index + 1).toString() : null;
+    const index = allPokemonList.findIndex((pokemonName) => pokemonName.toLowerCase() === lowerCaseName);
+    
+    if (index === -1) return null;
+  
+    if (index < 1025) {
+      return (index + 1).toString();
+    } else {
+      return (10001 + (index - 1025)).toString();
+    }
   };
+  
 
   // Input field is changed
   const handleInputChange = async (event) => {
@@ -106,7 +141,7 @@ function App() {
 
     if (!value) {
       const initialIds = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
-      const initialData = await Promise.all(initialIds.map(id => getPokemon(id)));
+      const initialData = await Promise.all(initialIds.map((id) => getPokemon(id)));
       setSamplePokemons(initialData);
       setSearched(false);
       setError('');
@@ -116,9 +151,8 @@ function App() {
 
     // Filter suggestions based on name or ID
     const filteredSuggestions = allPokemonList
-      .filter((pokemonName, index) => 
-        pokemonName.toLowerCase().includes(value.toLowerCase()) || 
-        formatId(index + 1).startsWith(value)
+      .filter((pokemonName, index) =>
+        pokemonName.toLowerCase().includes(value.toLowerCase()) || formatId(index + 1).startsWith(value)
       )
       .slice(0, 10);
     setSuggestions(filteredSuggestions);
@@ -137,7 +171,7 @@ function App() {
     setisSuggested(true);
   };
 
-  // Activates when pokemonName is changed 
+  // Activates when pokemonName is changed
   useEffect(() => {
     if (isSuggested) {
       handleSearch();
@@ -147,14 +181,20 @@ function App() {
   // Handle sort change
   const handleSortChange = (event) => {
     setSortOrder(event.target.value);
+    setSamplePokemons([]);
+    setLoadedPokemonCount(0); // Reset loaded count
   };
 
   // Sort samplePokemons based on sortOrder
   const sortedSamplePokemons = [...samplePokemons].sort((a, b) => {
-    if (sortOrder === 'asc') {
+    if (sortOrder === 'idAsc') {
       return a.id - b.id;
-    } else {
+    } else if (sortOrder === 'idDesc') {
       return b.id - a.id;
+    } else if (sortOrder === 'nameAsc') {
+      return a.name.localeCompare(b.name);
+    } else {
+      return b.name.localeCompare(a.name);
     }
   });
 
@@ -198,7 +238,7 @@ function App() {
         <input
           id="search-field"
           type="text"
-          value={inputField}
+          value={fixPokemonName(inputField)}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Enter Pokémon name or ID"
@@ -209,8 +249,10 @@ function App() {
           <span className="tooltiptext">Search</span>
         </button>
         <select id="sortOrder" value={sortOrder} onChange={handleSortChange}>
-          <option value="asc">Sort by ID: Ascending</option>
-          <option value="desc">Sort by ID: Descending</option>
+          <option value="idAsc">Sort by ID: Ascending</option>
+          <option value="idDesc">Sort by ID: Descending</option>
+          <option value="nameAsc">Sort by Name: Ascending</option>
+          <option value="nameDesc">Sort by Name: Descending</option>
         </select>
         {suggestions.length > 0 && (
           <div className="suggestions-dropdown">
@@ -228,12 +270,12 @@ function App() {
       </div>
       {error && <p id="txtErr">{error}</p>}
       <div className="pokemon-cards-container">
-        {sortedSamplePokemons.map(samplePokemon => (
+        {sortedSamplePokemons.map((samplePokemon) => (
           <div key={samplePokemon.id} className="pokemon-card" onClick={() => handleCardClick(samplePokemon)}>
             <p id="card-id">ID No: {formatId(samplePokemon.id)}</p>
             <p id="card-name">Name: {fixPokemonName(samplePokemon.name)}</p>
             <img id="card-img" src={samplePokemon.sprites.front_default} alt={samplePokemon.name} />
-            <p>Type: {samplePokemon.types.map(typeInfo => typeInfo.type.name).join(', ')}</p>
+            <p>Type: {samplePokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
           </div>
         ))}
       </div>
@@ -248,9 +290,9 @@ function App() {
                 <>
                   <div id="info-name">{fixPokemonName(pokemon.name)}</div>
                   <img id="info-img" src={pokemon.sprites.front_default} alt={pokemon.name} />
-                  <p className='pInfo'>Height: {pokemon.height}</p>
-                  <p className='pInfo'>Weight: {pokemon.weight}</p>
-                  <p className='pInfo'>Type: {pokemon.types.map(typeInfo => typeInfo.type.name).join(', ')}</p>
+                  <p className="pInfo">Height: {pokemon.height}</p>
+                  <p className="pInfo">Weight: {pokemon.weight}</p>
+                  <p className="pInfo">Type: {pokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
                 </>
               )}
             </div>
