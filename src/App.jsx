@@ -110,8 +110,12 @@ function App() {
       return;
     }
 
+    // Filter suggestions based on name or ID
     const filteredSuggestions = allPokemonList
-      .filter(pokemonName => pokemonName.toLowerCase().includes(value.toLowerCase()))
+      .filter((pokemonName, index) => 
+        pokemonName.toLowerCase().includes(value.toLowerCase()) || 
+        formatId(index + 1).startsWith(value)
+      )
       .slice(0, 10);
     setSuggestions(filteredSuggestions);
 
@@ -179,7 +183,7 @@ function App() {
           value={inputField}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Enter Pokémon name"
+          placeholder="Enter Pokémon name or ID"
           autoComplete="off"
         />
         <button id="btnSearch" onClick={handleSearch}>
