@@ -52,6 +52,11 @@ function App() {
       .join(' ');
   };
 
+  // Format ID
+  const formatId = (id) => {
+    return id.toString().padStart(3, '0');
+  };
+
   // Search
   const handleSearch = async () => {
     if (!pokemonName.trim()) {
@@ -163,7 +168,9 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <img id="imgPokedexLogo" src={pokedexLogo} alt="Pokedex Logo" />
+        <a href="/">
+          <img id="imgPokedexLogo" src={pokedexLogo} alt="Pokedex Logo" />
+        </a>
       </header>
       <div className="search-container">
         <input
@@ -197,7 +204,7 @@ function App() {
       <div className="pokemon-cards-container">
         {samplePokemons.map(samplePokemon => (
           <div key={samplePokemon.id} className="pokemon-card" onClick={() => handleCardClick(samplePokemon)}>
-            <p id="card-id">ID No: {samplePokemon.id}</p>
+            <p id="card-id">ID No: {formatId(samplePokemon.id)}</p>
             <p id="card-name">Name: {fixPokemonName(samplePokemon.name)}</p>
             <img id="card-img" src={samplePokemon.sprites.front_default} alt={samplePokemon.name} />
             <p>Type: {samplePokemon.types.map(typeInfo => typeInfo.type.name).join(', ')}</p>
