@@ -3,11 +3,9 @@ import './App.css';
 import { getPokemon } from './services/pokeapi';
 import pokedexLogo from './assets/pokedex-logo.png';
 import allPokemonList from './data/pokemonList.js'; // JSON file with all Pokémon names and IDs
-import 'rc-slider/assets/index.css';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-
-// import Slider from '@mui/material/Slider';
+import typeIcons from './services/icons';
 
 function App() {
   const [pokemonName, setPokemonName] = useState('');
@@ -24,9 +22,13 @@ function App() {
   const [loadedPokemonCount, setLoadedPokemonCount] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState([]); 
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [filteredPokemons, setFilteredPokemons] = useState([]);
   const [pokemonNumberRange, setPokemonNumberRange] = useState([1, 1025]);
   const [rangeValue, setRangeValue] = useState([1, 1025]);
+  const [alphabeticalRange, setAlphabeticalRange] = useState(['a', 'z']);
+  const [previousPokemon, setPreviousPokemon] = useState(null);
+  const [nextPokemon, setNextPokemon] = useState(null);
 
   const allTypes = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 
@@ -75,6 +77,14 @@ function App() {
     return Array.from(weaknesses);
   };
 
+  const alphabeticalMarks = {
+    1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H', 9: 'I', 10: 'J',
+    11: 'K', 12: 'L', 13: 'M', 14: 'N', 15: 'O', 16: 'P', 17: 'Q', 18: 'R', 19: 'S', 20: 'T',
+    21: 'U', 22: 'V', 23: 'W', 24: 'X', 25: 'Y', 26: 'Z'
+  };
+  
+   
+
   const fetchInitialPokemons = async () => {
     let initialIds = [];
 
@@ -118,7 +128,7 @@ function App() {
           .filter(id => parseInt(id) >= pokemonNumberRange[0]);
       } else {
         const sortedList = [...allPokemonList].sort((a, b) =>
-          sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
+          sortOrder === 'nameAsc' || filteredPokemons.length > 0 ? a.localeCompare(b) : b.localeCompare(a)
         );
         newIds = sortedList.slice(loadedPokemonCount, loadedPokemonCount + 10).map((name) => getPokemonIdFromName(name));
       }
@@ -156,11 +166,18 @@ function App() {
   const handleSearch = async () => {
     if (!pokemonName.trim()) {
       setError('');
-      setSamplePokemons([]);
       setSearched(false);
       return;
     }
-    const data = await getPokemon(pokemonName.toLowerCase());
+
+    let data;
+    if (!isNaN(pokemonName)) { // Check if the input is a number
+      data = await getPokemon(pokemonName);
+    } else {
+      data = await getPokemon(pokemonName.toLowerCase());
+    }
+
+    console.log(pokemonName) // name
     if (data) {
       setSamplePokemons([data]);
       setError('');
@@ -168,8 +185,9 @@ function App() {
     } else {
       setPokemon(null);
       setSamplePokemons([]);
-      setError(`Pokémon "${pokemonName}" does not exist!`);
       setSearched(true);
+      if (isNaN(pokemonName)) setError(`Pokémon "${pokemonName}" does not exist!`);
+      else setError(`Pokémon with ID ${pokemonName} does not exist!`);
     }
     setisSuggested(false);
     setSuggestions([]); // Clear suggestions after search
@@ -178,7 +196,19 @@ function App() {
   // Key pressed
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      handleSearch();
+      if (selectedSuggestionIndex >= 0) {
+        handleSuggestionClick(suggestions[selectedSuggestionIndex]);
+      } else {
+        handleSearch();
+      }
+    } else if (event.key === 'ArrowDown') {
+      setSelectedSuggestionIndex((prevIndex) =>
+        prevIndex < suggestions.length - 1 ? prevIndex + 1 : 0
+      );
+    } else if (event.key === 'ArrowUp') {
+      setSelectedSuggestionIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : suggestions.length - 1
+      );
     }
   };
 
@@ -255,17 +285,35 @@ function App() {
       return a.id - b.id;
     } else if (sortOrder === 'idDesc') {
       return b.id - a.id;
-    } else if (sortOrder === 'nameAsc') {
+    } else if (sortOrder === 'nameAsc' || filteredPokemons.length > 0) { // Ensure sorting by name when filtered by name range
       return a.name.localeCompare(b.name);
-    } else {
+    } else if (sortOrder === 'nameDesc') {
       return b.name.localeCompare(a.name);
     }
   });
 
   // Card is clicked
-  const handleCardClick = (selectedPokemon) => {
+  const handleCardClick = async (selectedPokemon) => {
     setPokemon(selectedPokemon);
     setShowOverlay(true);
+
+    // Fetch previous Pokémon
+    if (selectedPokemon.id > 1) {
+      const previousPokemonId = selectedPokemon.id === 10001 ? "1025" : (selectedPokemon.id - 1).toString();
+      const previousPokemonData = await getPokemon(previousPokemonId);
+      setPreviousPokemon(previousPokemonData);
+    } else {
+      setPreviousPokemon(null);
+    }
+
+    // Fetch next Pokémon
+    if (selectedPokemon.id < 1025 || (selectedPokemon.id >= 10001 && selectedPokemon.id < 10008)) {
+      const nextPokemonId = (selectedPokemon.id + 1).toString();
+      const nextPokemonData = await getPokemon(nextPokemonId);
+      setNextPokemon(nextPokemonData);
+    } else {
+      setNextPokemon(null);
+    }
   };
 
   // Overlay needs to close
@@ -275,10 +323,22 @@ function App() {
 
   // Previous pokemon button
   const handlePreviousPokemon = async () => {
-    if (pokemon && pokemon.id > 1) {
-      const previousPokemonId = (pokemon.id - 1).toString();
+    if (pokemon) {
+      const previousPokemonId = pokemon.id === 10001 ? "1025" : (pokemon.id - 1).toString();
       const previousPokemon = await getPokemon(previousPokemonId);
       setPokemon(previousPokemon);
+      
+      // Update previous and next Pokemon
+      if (previousPokemon.id > 1) {
+        const prevPrevPokemonId = previousPokemon.id === 10001 ? "1025" : (previousPokemon.id - 1).toString();
+        const prevPrevPokemonData = await getPokemon(prevPrevPokemonId);
+        setPreviousPokemon(prevPrevPokemonData);
+      } else {
+        setPreviousPokemon(null);
+      }
+      
+      const nextPokemonData = await getPokemon((previousPokemon.id + 1).toString());
+      setNextPokemon(nextPokemonData);
     }
   };
 
@@ -288,15 +348,31 @@ function App() {
       const nextPokemonId = (pokemon.id + 1).toString();
       const nextPokemon = await getPokemon(nextPokemonId);
       setPokemon(nextPokemon);
+      
+      // Update previous and next Pokemon
+      const previousPokemonData = await getPokemon(pokemon.id.toString());
+      setPreviousPokemon(previousPokemonData);
+      
+      if (nextPokemon.id < 1025 || (nextPokemon.id >= 10001 && nextPokemon.id < 10008)) {
+        const nextNextPokemonId = (nextPokemon.id + 1).toString();
+        const nextNextPokemonData = await getPokemon(nextNextPokemonId);
+        setNextPokemon(nextNextPokemonData);
+      } else {
+        setNextPokemon(null);
+      }
     }
   };
 
-  const getPokemonApiId = (index) => {
-    if (index < 1025) {
-      return (index + 1).toString();
-    } else {
-      return (10001 + (index - 1025)).toString();
-    }
+  const handleAlphabeticalChange = (values) => {
+    const alphaRange = [String.fromCharCode(values[0] + 96), String.fromCharCode(values[1] + 96)];
+    setAlphabeticalRange(alphaRange);
+  }; 
+
+  // Reset button
+  const handleResetFilter = () => {
+    setSelectedTypes([]); 
+    setRangeValue([1, 1025]); 
+    setAlphabeticalRange(['a', 'z']);
   };
 
   // Filter button
@@ -319,6 +395,9 @@ function App() {
       .filter(pokemon => pokemon && pokemon.types)
       .filter(pokemon => 
         pokemon.id >= rangeValue[0] && pokemon.id <= rangeValue[1]
+      )
+      .filter(pokemon => 
+        pokemon.name[0].toLowerCase() >= alphabeticalRange[0] && pokemon.name[0].toLowerCase() <= alphabeticalRange[1]
       );
   
     if (normalizedSelectedTypes.length > 0) {
@@ -334,9 +413,13 @@ function App() {
     } else {
       setError('');
     }
-    
+  
+    // Sort filteredData by name
+    filteredData.sort((a, b) => a.name.localeCompare(b.name));
+  
     console.log("allData "+allData.length)
     console.log(rangeValue[0]+"-"+rangeValue[1])
+    console.log(alphabeticalRange[0]+"-"+alphabeticalRange[1])
     console.log("filteredData "+filteredData.length)
     setFilteredPokemons(filteredData);
     setSamplePokemons(filteredData.slice(0, 10));
@@ -351,19 +434,20 @@ function App() {
         </a>
       </header>
       <div className="search-container">
-        <input
-          id="search-field"
-          type="text"
-          value={inputField}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter Pokémon name or ID"
-          autoComplete="off"
-        />
-        <button id="btnSearch" onClick={handleSearch}>
-          <i className="fas fa-search"></i>
-          <span className="tooltiptext">Search</span>
-        </button>
+        <div className="search-wrapper">
+          <input
+            id="search-field"
+            type="text"
+            value={fixPokemonName(inputField)}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter Pokémon name or ID"
+            autoComplete="off"
+          />
+          <button id="btnSearch" onClick={handleSearch}>
+            <i className="fas fa-search"></i>
+          </button>
+        </div>
         <select id="sortOrder" value={sortOrder} onChange={handleSortChange}>
           <option value="idAsc">Sort by ID: Ascending</option>
           <option value="idDesc">Sort by ID: Descending</option>
@@ -375,7 +459,9 @@ function App() {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="suggestion-item"
+                className={`suggestion-item ${
+                  index === selectedSuggestionIndex ? 'selected' : ''
+                }`}
                 onClick={() => handleSuggestionClick(suggestion)}
               >
                 {fixPokemonName(suggestion)}
@@ -384,7 +470,7 @@ function App() {
           </div>
         )}
       </div>
-      <button onClick={() => setFilterOpen(!filterOpen)}>
+      <button id="filter-toggle-btn" onClick={() => setFilterOpen(!filterOpen)}>
         {filterOpen ? 'Close Filters' : 'Open Filters'}
       </button>
       {filterOpen && (
@@ -409,10 +495,11 @@ function App() {
             <label htmlFor={type}>{type}</label>
           </div>
         ))}
-          <div className="slider-container">
+          <div className="slider-container-id">
             <p>ID Number:</p>
-            <div className="slider-label">
+            <div className="slider-label-id">
               <span>{rangeValue[0]}</span>
+              <span>-</span>
               <span>{rangeValue[1]}</span>
             </div>
             <Slider
@@ -423,7 +510,31 @@ function App() {
               onChange={(value) => setRangeValue(value)}
             />
           </div>
-          <button onClick={() => { setSelectedTypes([]); setRangeValue([1, 1025]); }}>Reset</button>
+          <div className="slider-container-name">
+            <p>Name Range:</p>
+            <div className="slider-label-name">
+              <span>{alphabeticalRange[0].toUpperCase()}</span>
+              <span>-</span>
+              <span>{alphabeticalRange[1].toUpperCase()}</span>
+            </div>
+            <Slider
+              range
+              min={1}
+              max={26}
+              marks={alphabeticalMarks}
+              value={[alphabeticalRange[0].charCodeAt(0) - 96, alphabeticalRange[1].charCodeAt(0) - 96]}
+              onChange={handleAlphabeticalChange}
+              handleRender={(node) => {
+                return React.cloneElement(node, {
+                  style: {
+                    ...node.props.style,
+                    borderColor: 'blue',
+                  },
+                });
+              }}
+            />
+          </div>
+          <button onClick={() => handleResetFilter()}>Reset</button>
           <button onClick={() => handleFilter()}>Filter</button>
         </div>
       )}
@@ -434,47 +545,85 @@ function App() {
             <p id="card-id">{formatId(samplePokemon.id)}</p>
             <p id="card-name">{fixPokemonName(samplePokemon.name)}</p>
             <img id="card-img" src={samplePokemon.sprites.front_default} alt={samplePokemon.name} />
-            <p>{samplePokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
+            <div className="card-type-container">
+              {samplePokemon.types.map((typeInfo) => (
+                <img
+                  key={typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)}
+                  src={typeIcons[typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)]}
+                  alt={typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)}
+                  className={`card-type-icon ${typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)}`}
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>
-      {!searched && samplePokemons.length > 0 && samplePokemons.length >= 10 && (filteredPokemons.length === 0 || samplePokemons.length < filteredPokemons.length) && (
-        <button className="btnLoadMore" onClick={loadMorePokemons}>Load More</button>
-      )}
+      {!searched && 
+        samplePokemons.length > 0 && 
+        samplePokemons.length >= 10 && 
+        (filteredPokemons.length === 0 || samplePokemons.length < filteredPokemons.length) && (
+          <button className="btnLoadMore" onClick={loadMorePokemons}>Load More</button>
+        )}
       {showOverlay && (
         <>
           <button className="btnBack" onClick={handleCloseOverlay}>Back to Pokédex</button>
           <div className="overlay">
-            <button className="btnNavigate" id="btnPrevious" onClick={handlePreviousPokemon}>←</button>
-            <div className="modal">
-              {pokemon && (
-                <>
-                  <div id="info-name">{fixPokemonName(pokemon.name)}</div>
+          <button className="btnNavigate" id="btnPrevious" onClick={handlePreviousPokemon}>
+            {previousPokemon ? `← ${formatId(previousPokemon.id)} ${fixPokemonName(previousPokemon.name)}` : '←'}
+          </button>
+          <div className="modal">
+            {pokemon && (
+              <>
+                <div className="modal-header">
                   <div id="info-id">{formatId(pokemon.id)}</div>
-                  <img id="info-img" src={pokemon.sprites.front_default} alt={pokemon.name} />
-                  <div className="info-container">
-                    <div className="info-left">
-                      <p className="pInfo">Height: {pokemon.height}</p>
-                      <p className="pInfo">Weight: {pokemon.weight}</p>
-                      <p className="pInfo">Type: {pokemon.types.map((typeInfo) => typeInfo.type.name).join(', ')}</p>
-                      <p className="pInfo">Weaknesses: {getWeaknesses(pokemon.types.map((typeInfo) => typeInfo.type.name)).join(', ')}</p>
-                    </div>
-                    <div className="info-right">
-                      <p className="pInfo">Stats:</p>
-                      <ul className="stats-list">
-                        {pokemon.stats.map((stat, index) => (
-                          <li key={index}>{stat.stat.name}: {stat.base_stat}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="info-hw">
+                    <p className="info-ht">Height: {pokemon.height}</p>
+                    <p className="info-wt">Weight: {pokemon.weight}</p>
                   </div>
-                </>
-              )}
-            </div>
-            <button className="btnNavigate" id="btnNext" onClick={handleNextPokemon}>→</button>
+                </div>
+                <div id="info-name">{fixPokemonName(pokemon.name)}</div>
+                <div id="info-img">
+                  <img src={pokemon.sprites.front_default} alt={pokemon.name} />
+                </div>
+                <div className="info-container">
+                  <div className="info-twa">
+                    <p className="info-type">Type:<br></br>{pokemon.types.map((typeInfo) => typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)).join(', ')}</p>
+                    <p className="info-weak">Weaknesses:<br></br>{getWeaknesses(pokemon.types.map((typeInfo) => typeInfo.type.name)).join(', ')}</p>
+                    <p className="info-abilities">Abilities:<br></br>{pokemon.abilities.map((abilityInfo) => abilityInfo.ability.name.charAt(0).toUpperCase() + abilityInfo.ability.name.slice(1)).join(', ')}</p>
+                  </div>
+                  <div className="info-stats">
+                    <p className="info-statsName">Stats:</p>
+                    <ul className="stats-list">
+                      {pokemon.stats.map((stat, index) => (
+                        <li key={index} className="stat-bar-container">
+                          <span className="stat-bar-label">{stat.stat.name.charAt(0).toUpperCase() + stat.stat.name.slice(1)}:</span>
+                          <div className="stat-bar">
+                            <div
+                              className={`stat-bar-fill ${stat.stat.name}`}
+                              style={{ width: `${stat.base_stat / 2}%` }} // Assuming 200 is the maximum base stat for scaling
+                            ></div>
+                          </div>
+                          <span className="stat-bar-value">{stat.base_stat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+            <button className="btnNavigate" id="btnNext" onClick={handleNextPokemon}>
+              {nextPokemon ? `${formatId(nextPokemon.id)} ${fixPokemonName(nextPokemon.name)} →` : '→'}
+            </button>
           </div>
         </>
       )}
+    <footer className="app-footer">
+        <p>
+          Made by: <a href="https://www.linkedin.com/in/loranebmfausto" target="_blank" rel="noopener noreferrer">Lorane Fausto</a>
+        </p>
+        <p>©Pokémon. ©Nintendo/Creatures Inc./GAME FREAK inc.</p>
+      </footer>
     </div>
   );
 }
