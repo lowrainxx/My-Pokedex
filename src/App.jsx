@@ -307,7 +307,7 @@ function App() {
     }
 
     // Fetch next Pokémon
-    if (selectedPokemon.id < 1025 || (selectedPokemon.id >= 10001 && selectedPokemon.id < 10008)) {
+    if (selectedPokemon.id < 1025 || (selectedPokemon.id >= 10001 && selectedPokemon.id < 10277)) {
       const nextPokemonId = (selectedPokemon.id + 1).toString();
       const nextPokemonData = await getPokemon(nextPokemonId);
       setNextPokemon(nextPokemonData);
@@ -329,38 +329,38 @@ function App() {
 
   // Previous pokemon button
   const handlePreviousPokemon = async () => {
-    if (pokemon) {
-      const previousPokemonId = pokemon.id === 10001 ? "1025" : (pokemon.id - 1).toString();
-      const previousPokemon = await getPokemon(previousPokemonId);
-      setPokemon(previousPokemon);
-      
+    if (previousPokemon) {
+      const previousPokemonId = previousPokemon.id === 10001 ? "1025" : (previousPokemon.id - 1).toString();
+      const previousPokemonData = await getPokemon(previousPokemonId);
+      setPokemon(previousPokemonData);
+
       // Update previous and next Pokemon
-      if (previousPokemon.id > 1) {
-        const prevPrevPokemonId = previousPokemon.id === 10001 ? "1025" : (previousPokemon.id - 1).toString();
+      if (previousPokemonData.id > 1) {
+        const prevPrevPokemonId = previousPokemonData.id === 10001 ? "1025" : (previousPokemonData.id - 1).toString();
         const prevPrevPokemonData = await getPokemon(prevPrevPokemonId);
         setPreviousPokemon(prevPrevPokemonData);
       } else {
         setPreviousPokemon(null);
       }
-      
-      const nextPokemonData = await getPokemon((previousPokemon.id + 1).toString());
+
+      const nextPokemonData = await getPokemon((previousPokemonData.id + 1).toString());
       setNextPokemon(nextPokemonData);
     }
   };
 
   // Next pokemon button
   const handleNextPokemon = async () => {
-    if (pokemon) {
-      const nextPokemonId = (pokemon.id + 1).toString();
-      const nextPokemon = await getPokemon(nextPokemonId);
-      setPokemon(nextPokemon);
-      
+    if (nextPokemon) {
+      const nextPokemonId = (nextPokemon.id + 1).toString();
+      const nextPokemonData = await getPokemon(nextPokemonId);
+      setPokemon(nextPokemonData);
+
       // Update previous and next Pokemon
-      const previousPokemonData = await getPokemon(pokemon.id.toString());
+      const previousPokemonData = await getPokemon(nextPokemon.id.toString());
       setPreviousPokemon(previousPokemonData);
-      
-      if (nextPokemon.id < 1025 || (nextPokemon.id >= 10001 && nextPokemon.id < 10008)) {
-        const nextNextPokemonId = (nextPokemon.id + 1).toString();
+
+      if (nextPokemonData.id < 1025 || (nextPokemonData.id >= 10001 && nextPokemonData.id < 10008)) {
+        const nextNextPokemonId = (nextPokemonData.id + 1).toString();
         const nextNextPokemonData = await getPokemon(nextNextPokemonId);
         setNextPokemon(nextNextPokemonData);
       } else {
@@ -581,7 +581,12 @@ function App() {
         <>
           <button className="btnBack" onClick={handleCloseOverlay}>Back to Pokédex</button>
           <div className="overlay">
-          <button className="btnNavigate" id="btnPrevious" onClick={handlePreviousPokemon}>
+          <button 
+            className="btnNavigate" 
+            id="btnPrevious" 
+            onClick={handlePreviousPokemon}
+            disabled={!previousPokemon} // Disable if no previous Pokemon
+          >
             {previousPokemon ? `← ${formatId(previousPokemon.id)} ${fixPokemonName(previousPokemon.name)}` : '←'}
           </button>
           <div className="modal">
@@ -590,8 +595,8 @@ function App() {
                 <div className="modal-header">
                   <div id="info-id">{formatId(pokemon.id)}</div>
                   <div className="info-hw">
-                    <p className="info-ht">Height: {pokemon.height}</p>
-                    <p className="info-wt">Weight: {pokemon.weight}</p>
+                    <p className="info-ht">Height: {pokemon.height} m</p>
+                    <p className="info-wt">Weight: {pokemon.weight*.1} kg</p>
                   </div>
                 </div>
                 <div id="info-name">{fixPokemonName(pokemon.name)}</div>
@@ -645,7 +650,12 @@ function App() {
             </>
           )}
           </div>
-            <button className="btnNavigate" id="btnNext" onClick={handleNextPokemon}>
+          <button 
+            className="btnNavigate" 
+            id="btnNext" 
+            onClick={handleNextPokemon}
+            disabled={!nextPokemon} // Disable if no next Pokemon
+          >
               {nextPokemon ? `${formatId(nextPokemon.id)} ${fixPokemonName(nextPokemon.name)} →` : '→'}
             </button>
           </div>

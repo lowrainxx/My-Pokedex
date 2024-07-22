@@ -113,8 +113,8 @@ body, html {
 }
 
 #info-img {
-  width: 300px; 
-  height: 175px;
+  width: 400px; 
+  height: 200px;
   margin: 5px 0 -10px;
   background-image: url('./assets/info-img-bg.jpg'); 
   background-size: cover;
@@ -122,8 +122,6 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; 
-  margin: 10px;
 }
 
 #info-img img {
@@ -237,8 +235,9 @@ body, html {
   border-radius: 5px;
   max-width: 40%; 
   width: 40%; 
-  max-height: 80%; 
-  height: 80%; 
+  max-height: 85%; 
+  height: 85%; 
+  margin-top: 50px;
   box-sizing: border-box;
   text-align: center; 
   display: flex;
@@ -285,6 +284,12 @@ body, html {
 
 .btnNavigate:hover {
   background-color: #21a1f1;
+}
+
+.btnNavigate:disabled {
+  background-color: rgb(190, 190, 190); 
+  color: lightgray;
+  cursor: not-allowed; 
 }
 
 /* Back to the Pokedex button */
