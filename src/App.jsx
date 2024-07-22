@@ -29,7 +29,7 @@ function App() {
   const [alphabeticalRange, setAlphabeticalRange] = useState(['a', 'z']);
   const [previousPokemon, setPreviousPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
-
+  
   const allTypes = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 
   const typeChart = {
@@ -321,6 +321,12 @@ function App() {
     setShowOverlay(false);
   };
 
+  const getRandomPokemon = async () => {
+    const randomId = Math.floor(Math.random() * 1025) + 1;
+    const randomData = await getPokemon(randomId.toString());
+    handleCardClick(randomData);
+  };
+
   // Previous pokemon button
   const handlePreviousPokemon = async () => {
     if (pokemon) {
@@ -446,14 +452,24 @@ function App() {
           />
           <button id="btnSearch" onClick={handleSearch}>
             <i className="fas fa-search"></i>
+            <span className="tooltiptext">Search</span>
           </button>
         </div>
-        <select id="sortOrder" value={sortOrder} onChange={handleSortChange}>
-          <option value="idAsc">Sort by ID: Ascending</option>
-          <option value="idDesc">Sort by ID: Descending</option>
-          <option value="nameAsc">Sort by Name: Ascending</option>
-          <option value="nameDesc">Sort by Name: Descending</option>
-        </select>
+        <button id="btnShuffle" onClick={getRandomPokemon}>
+          <i className="fas fa-random"></i>
+          <span className="tooltiptext">Surprise me!</span>
+        </button>
+        <div className="sort-filter-container">
+          <select id="sortOrder" value={sortOrder} onChange={handleSortChange}>
+            <option value="idAsc">Sort by ID: Ascending</option>
+            <option value="idDesc">Sort by ID: Descending</option>
+            <option value="nameAsc">Sort by Name: Ascending</option>
+            <option value="nameDesc">Sort by Name: Descending</option>
+          </select>
+        </div>
+        <button id="filter-toggle-btn" onClick={() => setFilterOpen(!filterOpen)}>
+          {filterOpen ? 'Close Filters' : 'Open Filters'}
+        </button>
         {suggestions.length > 0 && (
           <div className="suggestions-dropdown">
             {suggestions.map((suggestion, index) => (
@@ -470,9 +486,6 @@ function App() {
           </div>
         )}
       </div>
-      <button id="filter-toggle-btn" onClick={() => setFilterOpen(!filterOpen)}>
-        {filterOpen ? 'Close Filters' : 'Open Filters'}
-      </button>
       {filterOpen && (
         <div className="filter-options">
           <p>Type:</p>
@@ -586,17 +599,36 @@ function App() {
                   <img src={pokemon.sprites.front_default} alt={pokemon.name} />
                 </div>
                 <div className="info-container">
-                  <div className="info-twa">
-                    <p className="info-type">Type:<br></br>{pokemon.types.map((typeInfo) => typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)).join(', ')}</p>
-                    <p className="info-weak">Weaknesses:<br></br>{getWeaknesses(pokemon.types.map((typeInfo) => typeInfo.type.name)).join(', ')}</p>
-                    <p className="info-abilities">Abilities:<br></br>{pokemon.abilities.map((abilityInfo) => abilityInfo.ability.name.charAt(0).toUpperCase() + abilityInfo.ability.name.slice(1)).join(', ')}</p>
-                  </div>
-                  <div className="info-stats">
-                    <p className="info-statsName">Stats:</p>
-                    <ul className="stats-list">
-                      {pokemon.stats.map((stat, index) => (
+                <div className="info-twa">
+                  <p className="info-infoName">Information:</p>
+                  <p className="info-type">
+                    <span className="info-label">Type:</span> 
+                    <br></br>
+                    {pokemon.types.map((typeInfo) => typeInfo.type.name.charAt(0).toUpperCase() + typeInfo.type.name.slice(1)).join(', ')}
+                  </p>
+                  <p className="info-weak">
+                    <span className="info-label">Weaknesses:</span> 
+                    <br></br>
+                    {getWeaknesses(pokemon.types.map((typeInfo) => typeInfo.type.name)).join(', ')}
+                  </p>
+                  <p className="info-abilities">
+                    <span className="info-label">Abilities:</span> 
+                    <br></br>
+                    {pokemon.abilities.map((abilityInfo) => abilityInfo.ability.name.charAt(0).toUpperCase() + abilityInfo.ability.name.slice(1)).join(', ')}
+                  </p>
+                </div>
+                <div className="info-stats">
+                  <p className="info-statsName">Stats:</p>
+                  <ul className="stats-list">
+                    {pokemon.stats.map((stat, index) => {
+                      const statName = stat.stat.name
+                        .replace('hp', 'HP')
+                        .replace('special-attack', 'Special Atk')
+                        .replace('special-defense', 'Special Def')
+                        .replace(/\b\w/g, (char) => char.toUpperCase());
+                      return (
                         <li key={index} className="stat-bar-container">
-                          <span className="stat-bar-label">{stat.stat.name.charAt(0).toUpperCase() + stat.stat.name.slice(1)}:</span>
+                          <span className={`stat-bar-label ${stat.stat.name.replace('special-attack', 'special-attack').replace('special-defense', 'special-defense')}`}>{statName}:</span>
                           <div className="stat-bar">
                             <div
                               className={`stat-bar-fill ${stat.stat.name}`}
@@ -605,12 +637,13 @@ function App() {
                           </div>
                           <span className="stat-bar-value">{stat.base_stat}</span>
                         </li>
-                      ))}
-                    </ul>
-                  </div>
+                      );
+                    })}
+                  </ul>
                 </div>
-              </>
-            )}
+              </div>
+            </>
+          )}
           </div>
             <button className="btnNavigate" id="btnNext" onClick={handleNextPokemon}>
               {nextPokemon ? `${formatId(nextPokemon.id)} ${fixPokemonName(nextPokemon.name)} →` : '→'}

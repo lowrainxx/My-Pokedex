@@ -92,13 +92,11 @@ body, html {
 }
 
 .info-ht {
-  border: 2px solid black;
   padding: 10px;
-  margin-top: -5px;
+  margin-top: 2px;
 }
 
 .info-wt {
-  border: 2px solid black;
   padding: 10px;
   margin-top: -15px;
 }
@@ -109,7 +107,8 @@ body, html {
   text-align: center;
   width: 100%;
   background-color: white;
-  margin: 10px 15px -5px;
+  border-radius: 50px;
+  margin: 5px 15px -5px;
   color: black;
 }
 
@@ -124,7 +123,7 @@ body, html {
   align-items: center;
   justify-content: center;
   overflow: hidden; 
-  margin: 20px;
+  margin: 10px;
 }
 
 #info-img img {
@@ -139,12 +138,42 @@ body, html {
   justify-content: space-between;
   width: 100%;
   max-width: 600px;
+  font-size: 15px;
 }
 
 .info-twa, .info-stats {
   color: black;
   flex: 1;
-  margin: -10px 10px;
+  margin: 0 10px;
+  font-size: 16px;
+}
+
+.info-twa p, .info-stats p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.info-infoName {
+  font-weight: bold;
+  font-size: 20px;
+  margin: 0 -10px -10px -10px;
+}
+
+.info-label {
+  font-weight: bold;
+  display: inline-block;
+  width: 100px;
+}
+
+.info-type, .info-weak, .info-abilities {
+  background-color: rgba(49, 49, 49, 0.25);
+  border-radius: 50px;
+}
+
+.info-statsName {
+  font-weight: bold;
+  font-size: 20px;
+  margin: 0 -10px -10px -10px;
 }
 
 .stats-list {
@@ -169,14 +198,15 @@ body, html {
 .stat-bar {
   height: 15px;
   background-color: #ccc;
-  border-radius: 5px;
+  border-radius: 50px;
   flex: 1;
   position: relative;
+  margin-right: 10px;
 }
 
 .stat-bar-fill {
   height: 100%;
-  border-radius: 5px;
+  border-radius: 50px;
   transition: width 0.3s;
 }
 
@@ -204,7 +234,7 @@ body, html {
 .modal {
   background-color: rgb(253, 198, 198);
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 5px;
   max-width: 40%; 
   width: 40%; 
   max-height: 80%; 
@@ -222,6 +252,8 @@ body, html {
   justify-content: space-between;
   width: 100%;
   align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 3px solid black;
 }
 
 /* Left and Right buttons in Modal */
@@ -231,7 +263,7 @@ body, html {
   transform: translateY(-50%);
   background-color: #61dafb;
   border: none;
-  border-radius: 20%;
+  border-radius: 50px;
   padding: 10px 15px;
   font-size: 24px;
   cursor: pointer;
@@ -301,7 +333,7 @@ body, html {
 .pokemon-card {
   background-color: rgb(255, 224, 224);
   color: black;
-  border-radius: 10px;
+  border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 150px;
   padding: 10px;
@@ -309,16 +341,17 @@ body, html {
   text-align: center;
   margin-top: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 
 #card-id{
-  color: #97fcff;
+  color: #0f0d25;
   font-size: 20px;
-  background-color: rgb(0, 0, 0);
+  font-weight: bold;
   text-align: center;
-  border-radius: 10px;
-  padding: 5px;
-  margin: 10px 30px;
+  border-bottom: 2px solid black;
+  padding: 0 5px;
+  margin-top: 0;
 }
 
 #card-name{
@@ -326,9 +359,10 @@ body, html {
   font-size: 20px;
   background-color: white;
   text-align: center;
-  border-radius: 10px;
+  border-radius: 50px;
   padding: 5px;
   margin: 0px;
+  font-weight: bold;
 }
 
 #card-img {
@@ -395,7 +429,7 @@ body, html {
   display: flex;
   align-items: center; 
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
 .search-wrapper { 
@@ -413,7 +447,6 @@ body, html {
   background-color: #61dafb;
   color: #282c34;
   cursor: pointer;
-  margin-left: auto; /* Align right */
 }
 
 #sortOrder:hover {
@@ -431,6 +464,11 @@ body, html {
     margin-top: 10px;
     width: 100%; /* Full width for small screens */
   }
+}
+
+.sort-filter-container {
+  display: flex;
+  align-items: center;
 }
 
 #search-field {
@@ -454,26 +492,24 @@ body, html {
   font-size: 20px;
 }
 
+#btnSearch .tooltiptext {
+  visibility: hidden;
+  width: 100px;
+  font-size: 15px;
+  color: #e0f3ff;
+  text-align: center;
+  padding: 3px;
+  position: absolute;
+  z-index: 1;
+  bottom: 75%;
+  left: 10%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
 #btnSearch:hover .tooltiptext {
   visibility: visible;
   opacity: 1;
-}
-
-.tooltiptext {
-  visibility: hidden;
-  width: 60px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 5px;
-  padding: 5px;
-  position: absolute;
-  z-index: 1;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -30px;
-  opacity: 0;
-  transition: opacity 0.3s;
 }
 
 /* Dropdown container */
@@ -486,7 +522,7 @@ body, html {
   overflow-y: auto;
   background-color: white;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   z-index: 10;
 }
@@ -507,15 +543,56 @@ body, html {
   color: white;
 }
 
-/* Filter */
+/* Random */
+#btnShuffle {
+  margin: 0 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: white;
+  font-size: 20px;
+  position: relative;
+}
 
+#btnShuffle .fas {
+  font-size: 24px;
+}
+
+#btnShuffle:hover {
+  color: #21a1f1;
+}
+
+#btnShuffle .tooltiptext {
+  visibility: hidden;
+  width: 100px;
+  font-size: 10px;
+  color: #e0f3ff;
+  text-align: center;
+  padding: 3px;
+  position: absolute;
+  z-index: 1;
+  bottom: 75%;
+  left: 10%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#btnShuffle:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Filter */
 #filter-toggle-btn{
   font-weight: bold;
-  font-size: 20px;
-  margin-top: -10px;
   color: rgb(235, 235, 255);
   background-color: rgba(0, 0, 0, 0.315);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .filter-options {
@@ -527,7 +604,7 @@ body, html {
   justify-content: center;
   padding: 10px 10px;
   margin: 10px 50px;
-  border-radius: 10px;
+  border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   color: #282c34;
   background-color: rgb(255, 147, 147);
