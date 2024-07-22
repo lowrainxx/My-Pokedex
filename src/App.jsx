@@ -17,6 +17,12 @@ function App() {
   const [isSuggested, setisSuggested] = useState(false);
   const [sortOrder, setSortOrder] = useState('idAsc'); // State for sorting order
   const [loadedPokemonCount, setLoadedPokemonCount] = useState(0); // State for loaded pokemon count
+  const [filterOpen, setFilterOpen] = useState(false); // State for filter toggle
+  const [selectedTypes, setSelectedTypes] = useState([]); // State for selected filter types
+  const [filteredPokemons, setFilteredPokemons] = useState([]); // State for filtered Pokémon
+  const [disabledTypes, setDisabledTypes] = useState([]); // State for disabled filter types
+
+  const allTypes = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 
   const typeChart = {
     Normal: { weak: ["Fighting"], resist: [], immune: ["Ghost"] },
@@ -63,27 +69,27 @@ function App() {
     return Array.from(weaknesses);
   };
 
+  const fetchInitialPokemons = async () => {
+    let initialIds = [];
+
+    if (sortOrder === 'idAsc') {
+      initialIds = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+    } else if (sortOrder === 'idDesc') {
+      initialIds = Array.from({ length: 10 }, (_, i) => (1025 - i).toString());
+    } else {
+      const sortedList = [...allPokemonList].sort((a, b) =>
+        sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
+      );
+      initialIds = sortedList.slice(0, 10).map((name) => getPokemonIdFromName(name));
+    }
+
+    const initialData = await Promise.all(initialIds.map((id) => getPokemon(id)));
+    setSamplePokemons(initialData);
+    setLoadedPokemonCount(10);
+  };
+
   // Fetch initial Pokémon based on sort order
   useEffect(() => {
-    const fetchInitialPokemons = async () => {
-      let initialIds = [];
-
-      if (sortOrder === 'idAsc') {
-        initialIds = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
-      } else if (sortOrder === 'idDesc') {
-        initialIds = Array.from({ length: 10 }, (_, i) => (1025 - i).toString());
-      } else {
-        const sortedList = [...allPokemonList].sort((a, b) =>
-          sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
-        );
-        initialIds = sortedList.slice(0, 10).map((name) => getPokemonIdFromName(name));
-      }
-
-      const initialData = await Promise.all(initialIds.map((id) => getPokemon(id)));
-      setSamplePokemons(initialData);
-      setLoadedPokemonCount(10);
-    };
-
     fetchInitialPokemons();
   }, [sortOrder]);
 
@@ -91,25 +97,33 @@ function App() {
   const loadMorePokemons = async () => {
     if (isLoading) return;
     setIsLoading(true);
-
-    let newIds = [];
-
-    if (sortOrder === 'idAsc') {
-      newIds = Array.from({ length: 10 }, (_, i) => (loadedPokemonCount + i + 1).toString());
-    } else if (sortOrder === 'idDesc') {
-      newIds = Array.from({ length: 10 }, (_, i) => (1025 - loadedPokemonCount - i).toString());
+  
+    let newPokemons = [];
+  
+    if (filteredPokemons.length > 0) {
+      newPokemons = filteredPokemons.slice(loadedPokemonCount, loadedPokemonCount + 10);
     } else {
-      const sortedList = [...allPokemonList].sort((a, b) =>
-        sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
-      );
-      newIds = sortedList.slice(loadedPokemonCount, loadedPokemonCount + 10).map((name) => getPokemonIdFromName(name));
+      let newIds = [];
+      if (sortOrder === 'idAsc') {
+        newIds = Array.from({ length: 10 }, (_, i) => (loadedPokemonCount + i + 1).toString());
+      } else if (sortOrder === 'idDesc') {
+        newIds = Array.from({ length: 10 }, (_, i) => (1025 - loadedPokemonCount - i).toString());
+      } else {
+        const sortedList = [...allPokemonList].sort((a, b) =>
+          sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
+        );
+        newIds = sortedList.slice(loadedPokemonCount, loadedPokemonCount + 10).map((name) => getPokemonIdFromName(name));
+      }
+  
+      const newData = await Promise.all(newIds.map((id) => getPokemon(id)));
+      newPokemons = newData;
     }
-
-    const newData = await Promise.all(newIds.map((id) => getPokemon(id)));
-    setSamplePokemons([...samplePokemons, ...newData]);
+  
+    setSamplePokemons([...samplePokemons, ...newPokemons]);
     setLoadedPokemonCount(loadedPokemonCount + 10);
     setIsLoading(false);
   };
+  
 
   // Fix pokemon name
   const fixPokemonName = (string) => {
@@ -270,6 +284,56 @@ function App() {
     }
   };
 
+  const getPokemonApiId = (index) => {
+    if (index < 1025) {
+      return (index + 1).toString();
+    } else {
+      return (10001 + (index - 1025)).toString();
+    }
+  };
+
+  // Filter button
+  const handleFilter = async () => {
+    if (selectedTypes.length === 0) {
+      // If no filters are selected, reset to show initial sample
+      setLoadedPokemonCount(0);
+      await fetchInitialPokemons(); // Reset the samplePokemons
+      setFilteredPokemons([]); // Clear the filteredPokemons state
+      setError(''); // Clear any existing error message
+      return;
+    }
+  
+    const normalizedSelectedTypes = selectedTypes.map(type => type.toLowerCase());
+  
+    // Fetch all Pokémon data (consider optimizing this for large datasets)
+    const allData = await Promise.all(allPokemonList.map(async (name, index) => {
+      try {
+        return await getPokemon(getPokemonApiId(index));
+      } catch (error) {
+        console.error(`Failed to fetch data for Pokémon index ${index}:`, error);
+        return null;
+      }
+    }));
+  
+    const filteredData = allData
+      .filter(pokemon => pokemon && pokemon.types)
+      .filter(pokemon =>
+        normalizedSelectedTypes.every(type =>
+          pokemon.types.some(typeInfo => typeInfo.type.name.toLowerCase() === type)
+        )
+      );
+
+    if (filteredData.length === 0) {
+      setError('No Pokémons exist with these types!');
+    } else {
+      setError('');
+    }
+  
+    setFilteredPokemons(filteredData);
+    setSamplePokemons(filteredData.slice(0, 10));
+    setLoadedPokemonCount(10);
+  };
+  
   return (
     <div className="app">
       <header className="app-header">
@@ -311,6 +375,35 @@ function App() {
           </div>
         )}
       </div>
+      <button onClick={() => setFilterOpen(!filterOpen)}>
+        {filterOpen ? 'Close Filters' : 'Open Filters'}
+      </button>
+      {filterOpen && (
+        <div className="filter-options">
+        {allTypes.map((type) => (
+          <div key={type}>
+            <input
+              type="checkbox"
+              id={type}
+              value={type}
+              checked={selectedTypes.includes(type)}
+              disabled={!selectedTypes.includes(type) && selectedTypes.length >= 2}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedTypes([...selectedTypes, type]);
+                } else {
+                  setSelectedTypes(selectedTypes.filter((t) => t !== type));
+                }
+              }}
+            />
+            <label htmlFor={type}>{type}</label>
+          </div>
+        ))}
+        <button onClick={() => setSelectedTypes([])}>Reset</button>
+        <button onClick={() => handleFilter()}>Filter</button>
+      </div>
+      
+      )}
       {error && <p id="txtErr">{error}</p>}
       <div className="pokemon-cards-container">
         {sortedSamplePokemons.map((samplePokemon) => (
@@ -322,7 +415,9 @@ function App() {
           </div>
         ))}
       </div>
-      {!searched && samplePokemons.length > 0 && <button className="btnLoadMore" onClick={loadMorePokemons}>Load More</button>}
+      {!searched && samplePokemons.length > 0 && samplePokemons.length >= 10 && (filteredPokemons.length === 0 || samplePokemons.length < filteredPokemons.length) && (
+        <button className="btnLoadMore" onClick={loadMorePokemons}>Load More</button>
+      )}
       {showOverlay && (
         <>
           <button className="btnBack" onClick={handleCloseOverlay}>Back to Pokédex</button>
@@ -358,7 +453,7 @@ function App() {
         </>
       )}
     </div>
-  );  
+  );
 }
 
 export default App;
