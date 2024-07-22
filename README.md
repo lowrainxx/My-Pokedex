@@ -1,7 +1,6 @@
 This is a Pokedex app made by Lorane Fausto in completion of a technical assessment.
-All credits go to ©Pokémon. ©Nintendo/Creatures Inc./GAME FREAK inc.
 
-To visit: (github site here)
+All credits go to ©Pokémon. ©Nintendo/Creatures Inc./GAME FREAK inc.
 
 For the API documentation:
 https://pokeapi.co/docs/v2
@@ -12,3 +11,4 @@ How to run locally:
 - run `npm install` to install project dependencies
 - run `npm run dev` to start the application
 - go to **localhost:5173** on your selected browser
+- have fun! **`:)`**
