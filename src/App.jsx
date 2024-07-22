@@ -3,6 +3,11 @@ import './App.css';
 import { getPokemon } from './services/pokeapi';
 import pokedexLogo from './assets/pokedex-logo.png';
 import allPokemonList from './data/pokemonList.js'; // JSON file with all Pokémon names and IDs
+import 'rc-slider/assets/index.css';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
+
+// import Slider from '@mui/material/Slider';
 
 function App() {
   const [pokemonName, setPokemonName] = useState('');
@@ -15,12 +20,13 @@ function App() {
   const [searched, setSearched] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggested, setisSuggested] = useState(false);
-  const [sortOrder, setSortOrder] = useState('idAsc'); // State for sorting order
-  const [loadedPokemonCount, setLoadedPokemonCount] = useState(0); // State for loaded pokemon count
-  const [filterOpen, setFilterOpen] = useState(false); // State for filter toggle
-  const [selectedTypes, setSelectedTypes] = useState([]); // State for selected filter types
-  const [filteredPokemons, setFilteredPokemons] = useState([]); // State for filtered Pokémon
-  const [disabledTypes, setDisabledTypes] = useState([]); // State for disabled filter types
+  const [sortOrder, setSortOrder] = useState('idAsc'); 
+  const [loadedPokemonCount, setLoadedPokemonCount] = useState(0);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState([]); 
+  const [filteredPokemons, setFilteredPokemons] = useState([]);
+  const [pokemonNumberRange, setPokemonNumberRange] = useState([1, 1025]);
+  const [rangeValue, setRangeValue] = useState([1, 1025]);
 
   const allTypes = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 
@@ -105,9 +111,11 @@ function App() {
     } else {
       let newIds = [];
       if (sortOrder === 'idAsc') {
-        newIds = Array.from({ length: 10 }, (_, i) => (loadedPokemonCount + i + 1).toString());
+        newIds = Array.from({ length: 10 }, (_, i) => (loadedPokemonCount + i + 1).toString())
+          .filter(id => parseInt(id) <= pokemonNumberRange[1]);
       } else if (sortOrder === 'idDesc') {
-        newIds = Array.from({ length: 10 }, (_, i) => (1025 - loadedPokemonCount - i).toString());
+        newIds = Array.from({ length: 10 }, (_, i) => (1025 - loadedPokemonCount - i).toString())
+          .filter(id => parseInt(id) >= pokemonNumberRange[0]);
       } else {
         const sortedList = [...allPokemonList].sort((a, b) =>
           sortOrder === 'nameAsc' ? a.localeCompare(b) : b.localeCompare(a)
@@ -123,7 +131,6 @@ function App() {
     setLoadedPokemonCount(loadedPokemonCount + 10);
     setIsLoading(false);
   };
-  
 
   // Fix pokemon name
   const fixPokemonName = (string) => {
@@ -294,41 +301,43 @@ function App() {
 
   // Filter button
   const handleFilter = async () => {
-    if (selectedTypes.length === 0) {
-      // If no filters are selected, reset to show initial sample
-      setLoadedPokemonCount(0);
-      await fetchInitialPokemons(); // Reset the samplePokemons
-      setFilteredPokemons([]); // Clear the filteredPokemons state
-      setError(''); // Clear any existing error message
-      return;
-    }
-  
     const normalizedSelectedTypes = selectedTypes.map(type => type.toLowerCase());
   
-    // Fetch all Pokémon data (consider optimizing this for large datasets)
-    const allData = await Promise.all(allPokemonList.map(async (name, index) => {
-      try {
-        return await getPokemon(getPokemonApiId(index));
-      } catch (error) {
-        console.error(`Failed to fetch data for Pokémon index ${index}:`, error);
-        return null;
-      }
-    }));
+    // Fetch all Pokémon data
+    const allData = await Promise.all(
+      allPokemonList.slice(0, 1025).map(async (name, index) => {
+        try {
+          return await getPokemon((index + 1).toString());
+        } catch (error) {
+          console.error(`Failed to fetch data for Pokémon ID ${index + 1}:`, error);
+          return null;
+        }
+      })
+    );
   
-    const filteredData = allData
+    let filteredData = allData
       .filter(pokemon => pokemon && pokemon.types)
-      .filter(pokemon =>
+      .filter(pokemon => 
+        pokemon.id >= rangeValue[0] && pokemon.id <= rangeValue[1]
+      );
+  
+    if (normalizedSelectedTypes.length > 0) {
+      filteredData = filteredData.filter(pokemon =>
         normalizedSelectedTypes.every(type =>
           pokemon.types.some(typeInfo => typeInfo.type.name.toLowerCase() === type)
         )
       );
-
+    }
+  
     if (filteredData.length === 0) {
-      setError('No Pokémons exist with these types!');
+      setError('No Pokemons exist with these criteria!');
     } else {
       setError('');
     }
-  
+    
+    console.log("allData "+allData.length)
+    console.log(rangeValue[0]+"-"+rangeValue[1])
+    console.log("filteredData "+filteredData.length)
     setFilteredPokemons(filteredData);
     setSamplePokemons(filteredData.slice(0, 10));
     setLoadedPokemonCount(10);
@@ -380,6 +389,7 @@ function App() {
       </button>
       {filterOpen && (
         <div className="filter-options">
+          <p>Type:</p>
         {allTypes.map((type) => (
           <div key={type}>
             <input
@@ -399,10 +409,23 @@ function App() {
             <label htmlFor={type}>{type}</label>
           </div>
         ))}
-        <button onClick={() => setSelectedTypes([])}>Reset</button>
-        <button onClick={() => handleFilter()}>Filter</button>
-      </div>
-      
+          <div className="slider-container">
+            <p>ID Number:</p>
+            <div className="slider-label">
+              <span>{rangeValue[0]}</span>
+              <span>{rangeValue[1]}</span>
+            </div>
+            <Slider
+              range
+              min={1}
+              max={1025}
+              value={rangeValue}
+              onChange={(value) => setRangeValue(value)}
+            />
+          </div>
+          <button onClick={() => { setSelectedTypes([]); setRangeValue([1, 1025]); }}>Reset</button>
+          <button onClick={() => handleFilter()}>Filter</button>
+        </div>
       )}
       {error && <p id="txtErr">{error}</p>}
       <div className="pokemon-cards-container">
